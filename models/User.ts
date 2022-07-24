@@ -1,30 +1,22 @@
-import {Sequelize, Model, DataTypes} from 'sequelize';
+import {Model, DataTypes} from 'sequelize';
+const Sequelize = require('sequelize');
+const db = require('../utils/mysql.connector');
 
-const sequelize = new Sequelize('sqlite::memory:');
-const User = sequelize.define('User', {
+export const User = db.define('User', {
     idUser: {
-        type: DataTypes.INTEGER,
+        type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    name: DataTypes.STRING,
-    lastname: DataTypes.STRING,
-    password: DataTypes.STRING,
-    promo: DataTypes.STRING,
-    role: DataTypes.STRING
+    name: Sequelize.STRING,
+    lastname: Sequelize.STRING,
+    login: Sequelize.STRING,
+    password:{
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    promo: Sequelize.STRING,
+    role: Sequelize.STRING
 });
-class UserModel extends Model {
-    static async createUser() {
-        createUser();
-    }
-}
-async function createUser() {
-    const john = await User.create({
-        name: 'John',
-        lastname: 'Doe',
-        password: '123456',
-        promo: '2018',
-        role: 'admin'
-    });
-    console.log(john);
-}
+module.exports = User;
+

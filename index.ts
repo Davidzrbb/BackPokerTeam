@@ -1,14 +1,19 @@
 import {config} from "dotenv";
 import express from "express";
 import http from "http";
-import {db} from "./utils";
+
 
 config();
 
 async function startServer(): Promise<void> {
 
-    db.connect();
-
+    const db = require('./utils/mysql.connector');
+    db.authenticate()
+        .then(() => {
+            console.log('Connection has been established successfully.');
+        }).catch((err: any) => {
+            console.error('Unable to connect to the database:', err);
+        });
     const port = process.env.PORT || 3000;
     const app = express();
     const httpServer = http.createServer(app);
@@ -21,9 +26,15 @@ async function startServer(): Promise<void> {
     app.use(cors({origin: process.env.FRONT_URL}));
 
     httpServer.listen(port, () => console.log(`Listening on port ${port}`));
-    let userModel = require('./models/User');
-    await userModel.createUser();
+    const User = require('./models/User');
+    await User.create({
+        name: 'John',
+        lastname: 'Doe',
+        password: '123456',
+        promo: '2018',
+        role: 'admin'
+    });
+    console.log('User created');
 }
-
 
 startServer().catch(console.error);
