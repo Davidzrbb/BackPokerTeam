@@ -3,8 +3,8 @@ import {Model, DataTypes} from 'sequelize';
 const Sequelize = require('sequelize');
 const db = require('../utils/mysql.connector');
 
-export const Session = db.define('Session', {
-    idSession: {
+export const Presence = db.define('Presence', {
+    idPresence: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true
@@ -13,13 +13,13 @@ export const Session = db.define('Session', {
         type: Sequelize.INTEGER,
         allowNull: false
     },
-    token: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    expiration: {
+    dayPresence: {
         type: Sequelize.DATE,
         allowNull: false
+    },
+    validatePresence: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0
     },
     createdAt: {
         type: Sequelize.DATE,
@@ -30,4 +30,5 @@ export const Session = db.define('Session', {
         allowNull: false
     }
 });
-module.exports = Session;
+module.exports = Presence;
+

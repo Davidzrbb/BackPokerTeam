@@ -8,7 +8,7 @@ declare module 'express' {
     }
 }
 
-export function checkUserConnected(): RequestHandler {
+export function checkAdminConnected(): RequestHandler {
     return async function (req: Request,
                            res,
                            next) {
@@ -29,6 +29,10 @@ export function checkUserConnected(): RequestHandler {
         const token = parts[1];
         const user = await UserService.getInstance().getUserByToken(token);
         if (user === undefined) {
+            res.status(401).end();
+            return;
+        }
+        if (user.role !== 'admin') {
             res.status(401).end();
             return;
         }

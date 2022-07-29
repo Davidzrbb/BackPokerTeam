@@ -1,4 +1,5 @@
 import {Model, DataTypes} from 'sequelize';
+
 const Sequelize = require('sequelize');
 const db = require('../utils/mysql.connector');
 
@@ -8,15 +9,38 @@ export const User = db.define('User', {
         primaryKey: true,
         autoIncrement: true
     },
-    name: Sequelize.STRING,
-    lastname: Sequelize.STRING,
-    login: Sequelize.STRING,
-    password:{
+    name: {
         type: Sequelize.STRING,
         allowNull: false
     },
-    promo: Sequelize.STRING,
-    role: Sequelize.STRING
+    lastname: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    login: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    password: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    promo: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    role: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false
+    },
+    updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false
+    }
 });
 module.exports = User;
 

@@ -1,6 +1,7 @@
-import {User} from "../models/User"
 import {SecurityUtils} from "../utils";
 
+const Session = require('../models/Session');
+const User = require('../models/User');
 
 export class UserService {
 
@@ -16,7 +17,7 @@ export class UserService {
     private constructor() {
     }
 
-    public async subscribeUser(user: typeof User): Promise< typeof User> {
+    public async subscribeUser(user: typeof User): Promise<typeof User> {
         if (user.name === undefined || user.lastname === undefined || user.password === undefined || user.promo === undefined || user.role === undefined || user.login === undefined) {
             throw new Error("Missing parameters");
         }
@@ -27,16 +28,13 @@ export class UserService {
             throw new Error("Too long parameters");
         }
 
-        if (user.name.match(/[^a-zA-Z\d]/g) || user.lastname.match(/[^a-zA-Z\d]/g)  || user.promo.match(/[^a-zA-Z\d]/g) || user.role.match(/[^a-zA-Z\d]/g) || user.login.match(/[^a-zA-Z\d]/g)) {
+        if (user.name.match(/[^a-zA-Z\d]/g) || user.lastname.match(/[^a-zA-Z\d]/g) || user.promo.match(/[^a-zA-Z\d]/g) || user.role.match(/[^a-zA-Z\d]/g) || user.login.match(/[^a-zA-Z\d]/g)) {
             throw new Error("Invalid parameters");
         }
-        if(user.password.length < 6) {
-            throw new Error("Password too short");
-        }
-        if(user.promo.length !== 2) {
+        if (user.promo.length !== 2) {
             throw new Error("Invalid promo");
         }
-        if(user.role !== "admin" && user.role !== "user") {
+        if (user.role !== "admin" && user.role !== "user") {
             throw new Error("Invalid role");
         }
         if (await User.findOne({where: {name: user.name, lastname: user.lastname}})) {
@@ -45,12 +43,14 @@ export class UserService {
         if (await User.findOne({where: {login: user.login}})) {
             throw new Error("Login already exists");
         }
-        user.password = SecurityUtils.sha512(user.password);
+        user.createdAt = new Date();
+        user.updatedAt = new Date();
 
+        user.password = SecurityUtils.sha512(user.password);
         return await User.create(user);
     }
 
-    async connexionUser(param : typeof User): Promise< typeof User> {
+    async connexionUser(param: typeof User): Promise<typeof User> {
         if (param.login === undefined || param.password === undefined) {
             throw new Error("Missing parameters");
         }
@@ -60,37 +60,45 @@ export class UserService {
         if (param.login.length > 50 || param.password.length > 50) {
             throw new Error("Too long parameters");
         }
-        if (param.login.match(/[^a-zA-Z\d]/g) || param.password.match(/[^a-zA-Z\d]/g)) {
+        if (param.login.match(/[^a-zA-Z\d]/g)) {
             throw new Error("Invalid parameters");
         }
-        const user = await User.findOne({where: {login: param.login , password: SecurityUtils.sha512(param.password)}});
+        const user = await User.findOne({where: {login: param.login, password: SecurityUtils.sha512(param.password)}});
         if (!user) {
             throw new Error("User not found");
         }
-        let token = await this.updateSession(user);
+        let token = await this.createSession(user);
         if (!token) {
             throw new Error("Error in insert session");
         }
-        return user;
+        return {user: user, token: token.token};
     }
 
-    async updateSession(user: typeof User): Promise<string> {
-        const user_id = user.idUser;
-        let token = SecurityUtils.generateToken();
-        try {
-            await User.update({token: token}, {where: {idUser: user_id}});
-            return token;
-        } catch (error) {
-            console.log(error);
-            throw new Error("Error in insert session");
-        }
+    async createSession(user: typeof User): Promise<typeof Session> {
+        return await Session.create({
+            idUser: user.idUser,
+            token: SecurityUtils.sha512(user.login + user.password + new Date().getTime()),
+            expiration: new Date().getTime() + (1000 * 60 * 60 * 24 * 7),
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
     }
 
     async getUserByToken(token: string) {
-        const user = await User.findOne({where: {token: token}});
-        if (!user) {
-            throw new Error("User not found");
+        const session = await Session.findOne({where: {token: token}});
+        if (!session) {
+            return undefined;
         }
-        return user;
+        if (session.expiration < new Date().getTime()) {
+            return undefined;
+        }
+        return await User.findOne({where: {idUser: session.idUser}});
+    }
+
+    getUserById(id: number) {
+        if (id === undefined) {
+            throw new Error("Missing parameters");
+        }
+        return User.findOne({where: {idUser: id}});
     }
 }

@@ -1,6 +1,9 @@
 import {config} from "dotenv";
 import express from "express";
 import http from "http";
+import {UserController} from "./controlers/userController";
+import {Presence} from "./models/Presence";
+import {PresenceControler} from "./controlers/presence.controler";
 
 
 config();
@@ -12,8 +15,8 @@ async function startServer(): Promise<void> {
         .then(() => {
             console.log('Connection has been established successfully.');
         }).catch((err: any) => {
-            console.error('Unable to connect to the database:', err);
-        });
+        console.error('Unable to connect to the database:', err);
+    });
     const port = process.env.PORT || 3000;
     const app = express();
     const httpServer = http.createServer(app);
@@ -22,19 +25,15 @@ async function startServer(): Promise<void> {
     });
 
     let cors = require('cors');
-    // use it before all route definitions
     app.use(cors({origin: process.env.FRONT_URL}));
 
+    const userController = new UserController();
+    app.use('/user', userController.buildRoutes());
+
+    const presenceController = new PresenceControler();
+    app.use('/presence', presenceController.buildRoutes());
+
     httpServer.listen(port, () => console.log(`Listening on port ${port}`));
-    const User = require('./models/User');
-    await User.create({
-        name: 'John',
-        lastname: 'Doe',
-        password: '123456',
-        promo: '2018',
-        role: 'admin'
-    });
-    console.log('User created');
 }
 
 startServer().catch(console.error);
